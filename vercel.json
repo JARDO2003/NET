@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/send-notification.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/send-notification",
+      "dest": "/api/send-notification.js"
+    },
+    {
+      "src": "/firebase-messaging-sw.js",
+      "dest": "/firebase-messaging-sw.js",
+      "headers": {
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
