@@ -1,27 +1,18 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/send-notification.js",
-      "use": "@vercel/node"
+      "source": "/send-notification",
+      "destination": "/api/send-notification"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/send-notification",
-      "dest": "/api/send-notification.js"
-    },
-    {
-      "src": "/firebase-messaging-sw.js",
-      "dest": "/firebase-messaging-sw.js",
-      "headers": {
-        "Service-Worker-Allowed": "/",
-        "Cache-Control": "no-cache"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/firebase-messaging-sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
     }
   ]
 }
