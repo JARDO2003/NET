@@ -1,16 +1,17 @@
 const { GoogleAuth } = require('google-auth-library');
 
+// La private_key vient de la variable d'environnement Vercel
+// Les \n littéraux sont remplacés par de vrais sauts de ligne
+const PRIVATE_KEY = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+
 const SERVICE_ACCOUNT = {
-  "type": "service_account",
-  "project_id": "livraison-c8498",
-  "private_key_id": "f2ceaf58b797f5a52cc229d652f0e9393f0e7fc2",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDRD26i7sj62cLx\nyRsz7aZQ5PQYSXy0uln8xA2h10BLW6gauLJpWy+lQXMMigk2AKMprSB9z5zWvY/J\nv5rGQZqjT2vDsLBHzyFLzE7Wycjbplnok7ArM8TMy8CSRnjuP5/GOeShkAGvXrjT\nPunp9Twoh34ByLcXKj+DpFuvd826FTsYyXXzzuEv8MTmQjpx4XcoLJK25VxJ6PFg\naACWKrAQWAf/cbK4AGM962Ij5sq8qOc2gviAxjQMXYVnh1tGSVSXC5ILGM3oZ+l7\n8EJosmvkqt1cgX3KZI8tYzfqawwH9HcbjMn06/yCfsy8wft50JBgiII277zRQbrM\nBacNEo1LAgMBAAECggEAD7ZOtN0oar4CCkT4j+sNBGhotgiT4EtfJwGfGqpAUUmW\ntUdrVUK+rndgS7F2JsJegOvblMkNOxBtJZcKbVsR4bM+4Kq/XO5CzN0Skc8BkwyK\nFlI/O8f8wv2PQA8e2J0ch3vjZIcbsU/3qRzB3M0LE+q2/DBXHl0U//JS17mz0wfR\nqPSh/6GMl3F3UF2AQdWy8xKeyCY4iZZjFHqMtpq5JE9/s3oBO93LXbBjii/BcM5i\nvJ3YmlEw2AEnUHb2J1hhk2NSKsoUDXfCFGvNNrky2Fb6WHSB7c+pEMVSCFCKTMMi\nwD1AEaOpXXhQB8cs6IXWn3aWCqwdQTizWjSs92aYwQKBgQDvr5RCyzOrgET1heUI\noE1cytdrwmNyx8vfLPvMnvQnAEx0UbV19q0NpvKPJGaV7Ml/q01IxngYoy0r3E3F\nGf5DnPJNO7ve6+hZHjqY0tONnSPRGO/l/niiyM5d3EdVz2p8Si9HDpA7RClBEg+a\nUc4RdstvtdB+XW9DLLxpUoa3iwKBgQDfSjdBVXvU4l6Cv7iB3iia6MAY2yTQ9dap\nvUCI1PcWe7qZoYlekjw4OZzX9Sskv6pqEH5pyaX2IpTuAKw8bFmSP9Pn87TUm14x\noiPeABW5RYkkq16Iu8C9NCWwUBC1jjI4Y1Xa5fTlsluZv0SZkHCEnVNHMWlCYpGm\nvexujgA5QQKBgQClSySn25LKly73U1tb05EGiSx+uBP1OCw0wMT1nDksHFydaywF\nKhS18YgdhzDn++AKF4y4v4ZbF00zjj5jy0U6Q6Yl9Sfe2DnoG5y1f889Pj1RGi13\nI0L2oB0RRbQ8TUpWZKKuEjENbjg1E8uG1RuTl6U8aNpcCvuMC/HzgGI/eQKBgQCq\nLUoHhTsneI9HXw8kC0kvJwyg5QQeLf84xoAUyRq4C/yfcjnb1eAHigE7piMHkvwy\ncfemcIUIHjsbWW/rbTim+fZq5ZaAIxmbAlQLskzcM17ej60w0MeIa+H9ikfx1zn3\nN94LQw9usIyXlOqXjznyGGWL8OCkM7OGPWGgsKEDAQKBgQCadaZ3ATmVoZ7kRU0D\n7i9hPVgq4AM7GGjFPizo97omKTOH9GIpsP6cj9Ax6oL2HcmQNpBYr0HiBnC/YPLG\n+CbjRTop3P8r/zR249VdEwg0DuMS74LWNw3ObZ+0wQetHyAOm/ysSbEfis/pvfUD\nUuZdxunrjlmY15CIRo9127UqvA==\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@livraison-c8498.iam.gserviceaccount.com",
-  "client_id": "114335306450823773837",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40livraison-c8498.iam.gserviceaccount.com"
+  type: "service_account",
+  project_id: "livraison-c8498",
+  private_key_id: "f2ceaf58b797f5a52cc229d652f0e9393f0e7fc2",
+  private_key: PRIVATE_KEY,
+  client_email: "firebase-adminsdk-fbsvc@livraison-c8498.iam.gserviceaccount.com",
+  client_id: "114335306450823773837",
+  token_uri: "https://oauth2.googleapis.com/token",
 };
 
 const PROJECT_ID = "livraison-c8498";
@@ -69,9 +70,7 @@ async function sendFCMMessage(token, title, body, url, accessToken) {
   return { ok: res.ok, result };
 }
 
-// Vercel Serverless handler
 module.exports = async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -85,6 +84,8 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'tokens[] requis' });
   if (!title || !body)
     return res.status(400).json({ error: 'title et body requis' });
+  if (!PRIVATE_KEY || PRIVATE_KEY.length < 100)
+    return res.status(500).json({ error: 'Variable FIREBASE_PRIVATE_KEY manquante sur Vercel' });
 
   try {
     const accessToken = await getAccessToken();
@@ -111,7 +112,13 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ success: true, successCount, failureCount, total: tokens.length, errors: errors.slice(0, 5) });
+    return res.status(200).json({
+      success: true,
+      successCount,
+      failureCount,
+      total: tokens.length,
+      errors: errors.slice(0, 5)
+    });
 
   } catch (err) {
     console.error('[FCM Error]', err);
