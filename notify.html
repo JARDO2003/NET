@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Notify — Tableau de bord</title>
+  <link rel="icon" href="u.jpg" type="image/jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --surface3: #222230;
+      --accent: #ff5c35;
+      --accent2: #ff8c35;
+      --blue: #4c8dff;
+      --green: #00e676;
+      --yellow: #ffd600;
+      --red: #ff4444;
+      --text: #f0f0f8;
+      --muted: #6b6b88;
+      --border: #2a2a3a;
+      --glow: rgba(255, 92, 53, 0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 80% 10%, rgba(255,92,53,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 20% 90%, rgba(76,141,255,0.04) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .logo-img {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 14px var(--glow);
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .logo-text span { color: var(--accent); }
+
+    .nav-section {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      font-size: 0.68rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: all 0.18s;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(255,92,53,0.12); color: var(--accent); border: 1px solid rgba(255,92,53,0.2); }
+
+    .nav-item .icon { font-size: 1rem; width: 22px; text-align: center; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px 24px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .stats-mini {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .stats-mini-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .stat-label { font-size: 0.78rem; color: var(--muted); }
+    .stat-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.orange { color: var(--accent); }
+
+    /* Main content */
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      letter-spacing: -0.03em;
+    }
+
+    .page-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-sm {
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Stats cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      opacity: 0.06;
+    }
+
+    .stat-card.c1::after { background: var(--green); }
+    .stat-card.c2::after { background: var(--accent); }
+    .stat-card.c3::after { background: var(--blue); }
+    .stat-card.c4::after { background: var(--yellow); }
+
+    .stat-card-label {
+      font-size: 0.75rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .stat-card-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Two-column layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+
+    /* Panel */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .panel-body { padding: 24px; }
+
+    /* Form elements */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,92,53,0.1);
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    select option { background: var(--surface2); }
+
+    /* Target selector */
+    .target-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .target-option {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-align: center;
+    }
+
+    .target-option:hover { border-color: rgba(255,92,53,0.4); }
+    .target-option.selected { border-color: var(--accent); background: rgba(255,92,53,0.08); }
+
+    .target-option .t-icon { font-size: 1.5rem; margin-bottom: 6px; }
+    .target-option .t-label {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+    .target-option .t-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    /* User select */
+    #user-select-area {
+      display: none;
+    }
+
+    .user-list-container {
+      max-height: 200px;
+      overflow-y: auto;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .user-list-container::-webkit-scrollbar { width: 4px; }
+    .user-list-container::-webkit-scrollbar-track { background: transparent; }
+    .user-list-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .user-item:last-child { border-bottom: none; }
+    .user-item:hover { background: var(--surface3); }
+    .user-item.selected { background: rgba(255,92,53,0.08); }
+
+    .user-item input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 0.87rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-phone { font-size: 0.75rem; color: var(--muted); }
+
+    .user-badge {
+      font-size: 0.65rem;
+      background: rgba(0,230,118,0.1);
+      border: 1px solid rgba(0,230,118,0.2);
+      color: var(--green);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* Send button */
+    .btn-send {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 28px rgba(255,92,53,0.3);
+    }
+
+    .btn-send:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,92,53,0.45); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Preview */
+    .preview-phone {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .preview-label {
+      font-size: 0.72rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .notif-preview {
+      background: var(--surface3);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .notif-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .notif-content { flex: 1; }
+    .notif-app { font-size: 0.68rem; color: var(--muted); margin-bottom: 3px; font-family: 'Syne', sans-serif; font-weight: 600; }
+    .notif-title { font-size: 0.87rem; font-weight: 600; margin-bottom: 3px; }
+    .notif-body { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+
+    /* History */
+    .history-list { }
+
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-item:last-child { border-bottom: none; }
+
+    .history-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .history-info { flex: 1; }
+    .history-title { font-size: 0.87rem; font-weight: 500; margin-bottom: 4px; }
+    .history-meta { font-size: 0.75rem; color: var(--muted); }
+
+    .history-badge {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+    }
+
+    .badge-all { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+    .badge-select { background: rgba(76,141,255,0.1); color: var(--blue); border: 1px solid rgba(76,141,255,0.2); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 360px;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(0,230,118,0.3); }
+    .toast.error { border-color: rgba(255,68,68,0.3); }
+
+    .toast-icon { font-size: 1.3rem; }
+    .toast-text { font-size: 0.88rem; line-height: 1.4; }
+    .toast-text strong { font-family: 'Syne', sans-serif; font-weight: 700; display: block; margin-bottom: 2px; }
+
+    /* Loading spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    .counter-info {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .counter-info strong { color: var(--accent); }
+
+    @media (max-width: 1100px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="u.jpg" alt="Logo" class="logo-img" onerror="this.style.background='#ff5c35';this.removeAttribute('src')" />
+      <span class="logo-text">Express<span>Notify</span></span>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active">
+        <span class="icon">📤</span>
+        Envoyer une notif
+      </div>
+      <div class="nav-item" onclick="loadHistory()">
+        <span class="icon">📋</span>
+        Historique
+      </div>
+      <div class="nav-item" onclick="window.open('index.html','_blank')">
+        <span class="icon">👥</span>
+        Page d'inscription
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="stats-mini">
+        <div class="stats-mini-title">En direct</div>
+        <div class="stat-row">
+          <span class="stat-label">Abonnés actifs</span>
+          <span class="stat-value green" id="sidebar-count">...</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Notifs envoyées</span>
+          <span class="stat-value orange" id="sidebar-sent">0</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Tableau de bord</div>
+        <div class="page-sub">Gérez et envoyez vos notifications push</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-sm btn-ghost" onclick="refreshUsers()">🔄 Actualiser</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card c1">
+        <div class="stat-card-label">Abonnés totaux</div>
+        <div class="stat-card-value" style="color:var(--green)" id="stat-total">—</div>
+        <div class="stat-card-sub">Utilisateurs inscrits</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-card-label">Notifs envoyées</div>
+        <div class="stat-card-value" style="color:var(--accent)" id="stat-sent">0</div>
+        <div class="stat-card-sub">Cette session</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-card-label">Sélectionnés</div>
+        <div class="stat-card-value" style="color:var(--blue)" id="stat-selected">0</div>
+        <div class="stat-card-sub">Pour l'envoi actuel</div>
+      </div>
+      <div class="stat-card c4">
+        <div class="stat-card-label">Statut FCM</div>
+        <div class="stat-card-value" style="color:var(--yellow);font-size:1.1rem" id="stat-status">Vérification...</div>
+        <div class="stat-card-sub">Service Worker</div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="two-col">
+      <!-- Send form -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">✉️ Nouvelle notification</span>
+        </div>
+        <div class="panel-body">
+          <!-- Target -->
+          <div class="form-group">
+            <label>Cible</label>
+            <div class="target-options">
+              <div class="target-option selected" id="target-all" onclick="selectTarget('all')">
+                <div class="t-icon">📢</div>
+                <div class="t-label">Tout le monde</div>
+                <div class="t-sub" id="all-count-label">Tous les abonnés</div>
+              </div>
+              <div class="target-option" id="target-select" onclick="selectTarget('select')">
+                <div class="t-icon">🎯</div>
+                <div class="t-label">Sélectionner</div>
+                <div class="t-sub">Choisir des personnes</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User select -->
+          <div id="user-select-area">
+            <div class="form-group">
+              <label>Abonnés <span id="selected-count-label" style="color:var(--accent)"></span></label>
+              <div class="counter-info">Cochez les destinataires. <strong id="sel-count">0</strong> sélectionné(s).</div>
+              <div class="user-list-container" id="user-list">
+                <div class="empty-state"><div class="empty-icon">⏳</div>Chargement...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Title & body -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Titre</label>
+              <input type="text" id="notif-title" placeholder="Ex: Nouvelle offre !" oninput="updatePreview()" />
+            </div>
+            <div class="form-group">
+              <label>Icône URL (optionnel)</label>
+              <input type="text" id="notif-icon" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="notif-body" placeholder="Écrivez votre message ici..." oninput="updatePreview()"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>URL de redirection (optionnel)</label>
+            <input type="text" id="notif-url" placeholder="https://votresite.com/page" />
+          </div>
+
+          <button class="btn-send" id="sendBtn" onclick="sendNotification()">
+            <span id="sendBtnText">🚀 Envoyer la notification</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Preview -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">👁️ Aperçu</span>
+          </div>
+          <div class="panel-body">
+            <div class="preview-phone">
+              <div class="preview-label">Aperçu Android / iOS</div>
+              <div class="notif-preview">
+                <img src="u.jpg" alt="icon" class="notif-icon" onerror="this.style.background='#ff5c35';this.removeAttribute('src')" />
+                <div class="notif-content">
+                  <div class="notif-app">Express Notify</div>
+                  <div class="notif-title" id="preview-title">Titre de la notification</div>
+                  <div class="notif-body" id="preview-body">Le corps du message apparaîtra ici...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📋 Derniers envois</span>
+            <button class="btn-sm btn-ghost" onclick="clearHistory()">Effacer</button>
+          </div>
+          <div class="panel-body" style="padding:16px 24px;">
+            <div id="history-list">
+              <div class="empty-state"><div class="empty-icon">📭</div>Aucun envoi pour le moment</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon"></div>
+  <div class="toast-text" id="toast-text"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBsGrY-AqYMoI70kT3WMxLgW0HwYA4KyaQ",
+    authDomain: "livraison-c8498.firebaseapp.com",
+    projectId: "livraison-c8498",
+    storageBucket: "livraison-c8498.firebasestorage.app",
+    messagingSenderId: "403240604780",
+    appId: "1:403240604780:web:77d84ad03d68bdaddfb449"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // State
+  let allUsers = [];
+  let selectedUsers = new Set();
+  let targetMode = 'all';
+  let sentCount = 0;
+  let localHistory = JSON.parse(localStorage.getItem('en_history') || '[]');
+
+  // ==== INIT ====
+  window.addEventListener('load', () => {
+    refreshUsers();
+    renderHistory();
+    updatePreview();
+    // Check SW
+    if ('serviceWorker' in navigator) {
+      document.getElementById('stat-status').textContent = '✅ Actif';
+    } else {
+      document.getElementById('stat-status').textContent = '❌ Indisponible';
+    }
+  });
+
+  // ==== USERS ====
+  async function refreshUsers() {
+    try {
+      const snap = await db.collection('subscribers').where('active', '==', true).get();
+      allUsers = [];
+      snap.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+
+      const count = allUsers.length;
+      document.getElementById('stat-total').textContent = count;
+      document.getElementById('sidebar-count').textContent = count;
+      document.getElementById('all-count-label').textContent = `${count} abonné(s)`;
+
+      renderUserList();
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Erreur', 'Impossible de charger les abonnés: ' + err.message);
+    }
+  }
+
+  function renderUserList() {
+    const container = document.getElementById('user-list');
+    if (allUsers.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>Aucun abonné inscrit</div>';
+      return;
+    }
+
+    container.innerHTML = allUsers.map(user => {
+      const initials = `${(user.firstName||'?')[0]}${(user.lastName||'?')[0]}`.toUpperCase();
+      const checked = selectedUsers.has(user.id) ? 'checked' : '';
+      const selected = selectedUsers.has(user.id) ? 'selected' : '';
+      return `
+        <div class="user-item ${selected}" onclick="toggleUser('${user.id}')">
+          <input type="checkbox" ${checked} onclick="event.stopPropagation();toggleUser('${user.id}')" />
+          <div class="user-avatar">${initials}</div>
+          <div class="user-info">
+            <div class="user-name">${user.firstName || ''} ${user.lastName || ''}</div>
+            <div class="user-phone">${user.phone || ''}</div>
+          </div>
+          <div class="user-badge">Actif</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleUser(userId) {
+    if (selectedUsers.has(userId)) {
+      selectedUsers.delete(userId);
+    } else {
+      selectedUsers.add(userId);
+    }
+    document.getElementById('sel-count').textContent = selectedUsers.size;
+    document.getElementById('stat-selected').textContent = selectedUsers.size;
+    renderUserList();
+  }
+
+  function selectTarget(mode) {
+    targetMode = mode;
+    document.getElementById('target-all').classList.toggle('selected', mode === 'all');
+    document.getElementById('target-select').classList.toggle('selected', mode === 'select');
+    const area = document.getElementById('user-select-area');
+    area.style.display = mode === 'select' ? 'block' : 'none';
+
+    if (mode === 'select') refreshUsers();
+    else {
+      selectedUsers.clear();
+      document.getElementById('stat-selected').textContent = '0';
+    }
+  }
+
+  // ==== PREVIEW ====
+  function updatePreview() {
+    const title = document.getElementById('notif-title').value || 'Titre de la notification';
+    const body = document.getElementById('notif-body').value || 'Le corps du message apparaîtra ici...';
+    document.getElementById('preview-title').textContent = title;
+    document.getElementById('preview-body').textContent = body;
+  }
+
+  // ==== SEND ====
+  async function sendNotification() {
+    const title = document.getElementById('notif-title').value.trim();
+    const body = document.getElementById('notif-body').value.trim();
+    const url = document.getElementById('notif-url').value.trim();
+
+    if (!title || !body) {
+      showToast('error', '⚠️ Champs requis', 'Le titre et le message sont obligatoires.');
+      return;
+    }
+
+    if (targetMode === 'select' && selectedUsers.size === 0) {
+      showToast('error', '⚠️ Aucun destinataire', 'Sélectionnez au moins un abonné.');
+      return;
+    }
+
+    const btn = document.getElementById('sendBtn');
+    const btnText = document.getElementById('sendBtnText');
+    btn.disabled = true;
+    btnText.innerHTML = '<div class="spinner"></div> Envoi en cours...';
+
+    try {
+      let targets = [];
+      if (targetMode === 'all') {
+        targets = allUsers;
+      } else {
+        targets = allUsers.filter(u => selectedUsers.has(u.id));
+      }
+
+      if (targets.length === 0) {
+        throw new Error('Aucun abonné disponible');
+      }
+
+      const tokens = targets.map(u => u.token).filter(Boolean);
+
+      // Call our server.js endpoint
+      const response = await fetch('/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokens, title, body, url })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Erreur serveur');
+      }
+
+      const result = await response.json();
+
+      sentCount++;
+      document.getElementById('stat-sent').textContent = sentCount;
+      document.getElementById('sidebar-sent').textContent = sentCount;
+
+      // Save history
+      const entry = {
+        id: Date.now(),
+        title,
+        body,
+        count: tokens.length,
+        mode: targetMode === 'all' ? 'Tous' : 'Sélection',
+        time: new Date().toLocaleString('fr-FR'),
+        success: result.successCount || 0,
+        failure: result.failureCount || 0
+      };
+      localHistory.unshift(entry);
+      if (localHistory.length > 50) localHistory.pop();
+      localStorage.setItem('en_history', JSON.stringify(localHistory));
+
+      renderHistory();
+      showToast('success', '✅ Envoyé !', `${result.successCount || tokens.length} notification(s) envoyée(s) avec succès.`);
+
+      // Reset
+      document.getElementById('notif-title').value = '';
+      document.getElementById('notif-body').value = '';
+      document.getElementById('notif-url').value = '';
+      updatePreview();
+
+    } catch (err) {
+      console.error(err);
+      showToast('error', '❌ Erreur d\'envoi', err.message);
+    } finally {
+      btn.disabled = false;
+      btnText.innerHTML = '🚀 Envoyer la notification';
+    }
+  }
+
+  // ==== HISTORY ====
+  function renderHistory() {
+    const container = document.getElementById('history-list');
+    if (localHistory.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>Aucun envoi pour le moment</div>';
+      return;
+    }
+    container.innerHTML = localHistory.slice(0, 8).map(h => `
+      <div class="history-item">
+        <div class="history-dot"></div>
+        <div class="history-info">
+          <div class="history-title">${h.title}</div>
+          <div class="history-meta">${h.time} · ${h.count} dest. · ✅ ${h.success || h.count} / ❌ ${h.failure || 0}</div>
+        </div>
+        <span class="history-badge ${h.mode === 'Tous' ? 'badge-all' : 'badge-select'}">${h.mode}</span>
+      </div>
+    `).join('');
+  }
+
+  function clearHistory() {
+    localHistory = [];
+    localStorage.removeItem('en_history');
+    renderHistory();
+  }
+
+  function loadHistory() { renderHistory(); }
+
+  // ==== TOAST ====
+  let toastTimer;
+  function showToast(type, title, msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-icon').textContent = type === 'success' ? '✅' : '❌';
+    document.getElementById('toast-text').innerHTML = `<strong>${title}</strong>${msg}`;
+    toast.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+</script>
+</body>
+</html>
